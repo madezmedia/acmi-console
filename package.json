@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:qa": "node tests/qa/runner.mjs",
+    "test:qa:prod": "node tests/qa/runner.mjs --base-url=https://acmi-console.vercel.app",
+    "test:qa:local": "node tests/qa/runner.mjs --base-url=http://localhost:3000"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.2",
