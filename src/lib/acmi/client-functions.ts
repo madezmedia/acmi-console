@@ -12,6 +12,8 @@ import type {
   AcmiEvent,
   AcmiWorkItem,
   AcmiTimelineOptions,
+  AcmiCatResult,
+  AcmiCatOptions,
 } from './acmi-types';
 
 // ---------------------------------------------------------------------------
@@ -65,6 +67,43 @@ export async function getTimeline(
   const response = await fetch(`/api/acmi/${encodeURIComponent(ns)}/${encodeURIComponent(id)}?${params}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch timeline: ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// ---------------------------------------------------------------------------
+// Cat / Multi-stream timeline merge
+// ---------------------------------------------------------------------------
+
+/**
+ * Source descriptor for the cat timeline merge.
+ */
+export interface CatTimelineSource {
+  namespace: string;
+  id: string;
+}
+
+/**
+ * Merge timelines from multiple entities, sorted by timestamp.
+ * Calls the API proxy route /api/acmi/cat.
+ *
+ * Used by: AcmiBusFeed
+ */
+export async function catTimeline(
+  sources: CatTimelineSource[],
+  options?: AcmiCatOptions,
+): Promise<AcmiCatResult> {
+  const params = new URLSearchParams();
+  const keys = sources.map((s) => `${s.namespace}:${s.id}`).join(',');
+  params.set('keys', keys);
+  if (options?.limit != null) params.set('limit', String(options.limit));
+  if (options?.since != null) params.set('since', options.since);
+  if (options?.deduplicate != null) params.set('deduplicate', String(options.deduplicate));
+  if (options?.sinceMs != null) params.set('sinceMs', String(options.sinceMs));
+
+  const response = await fetch(`/api/acmi/cat?${params}`);
+  if (!response.ok) {
+    throw new Error(`Failed to merge timelines: ${response.status} ${response.statusText}`);
   }
   return response.json();
 }
