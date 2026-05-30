@@ -119,8 +119,8 @@ export default function CoordinationPage() {
         </div>
       )}
 
-      {/* Main grid */}
-      <div className="grid gap-6 xl:grid-cols-2">
+      {/* Main grid — single column on mobile, two columns on large screens */}
+      <div className="grid gap-6 lg:grid-cols-2">
         {/* Left column — Thread */}
         <div className="space-y-6">
           <AcmiCoordinationThread
