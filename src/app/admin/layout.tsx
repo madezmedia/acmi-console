@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin-sidebar';
 import { AcmiProvider } from '@/lib/acmi/acmi-context';
+import { AcmiWarningBanner } from '@/components/acmi-warning-banner';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
@@ -12,6 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex min-h-[calc(100vh-57px)]">
         <AdminSidebar />
         <main className="flex-1 overflow-auto p-4 md:p-6">
+          <AcmiWarningBanner />
           {children}
         </main>
       </div>
