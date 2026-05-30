@@ -1,15 +1,52 @@
 'use client';
 
 import { useState } from 'react';
+import { useOrg } from '@/lib/acmi/acmi-context';
 import { AcmiEntitySearch } from '@/components/acmi/AcmiEntitySearch';
 
 export default function SettingsPage() {
+  const { activeOrg } = useOrg();
   const [config, setConfig] = useState({ url: '', token: '', tenantPrefix: '' });
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    if (!activeOrg) return;
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const res = await fetch(`/api/db/organizations/${activeOrg.slug}/acmi-config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          upstash_url: config.url,
+          upstash_token: config.token,
+          tenant_prefix: config.tenantPrefix || null,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Failed to save: ${res.status}`);
+      }
+      setSaved(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Settings</h1>
+
+      {activeOrg && (
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+          Active org: <strong>{activeOrg.name}</strong> (slug: {activeOrg.slug})
+        </div>
+      )}
 
       <section className="rounded-lg border p-6">
         <h2 className="mb-4 text-lg font-semibold">ACMI Connection</h2>
@@ -45,17 +82,14 @@ export default function SettingsPage() {
             />
           </div>
           <button
-            onClick={async () => {
-              setSaving(true);
-              // Will wire to PUT /api/db/organizations/[slug]/acmi-config later
-              await new Promise(r => setTimeout(r, 500));
-              setSaving(false);
-            }}
-            disabled={saving || !config.url || !config.token}
+            onClick={handleSave}
+            disabled={saving || !config.url || !config.token || !activeOrg}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Configuration'}
           </button>
+          {saved && <p className="text-sm text-green-600">✓ Configuration saved successfully.</p>}
+          {error && <p className="text-sm text-red-600">✗ {error}</p>}
         </div>
       </section>
 

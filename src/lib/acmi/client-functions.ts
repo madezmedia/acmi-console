@@ -17,6 +17,20 @@ import type {
 } from './acmi-types';
 
 // ---------------------------------------------------------------------------
+// Org context — set by AcmiProvider on mount
+// ---------------------------------------------------------------------------
+
+let currentOrgId: string | null = null;
+
+export function setCurrentOrgId(orgId: string | null) {
+  currentOrgId = orgId;
+}
+
+export function getCurrentOrgId(): string | null {
+  return currentOrgId;
+}
+
+// ---------------------------------------------------------------------------
 // Entity
 // ---------------------------------------------------------------------------
 
@@ -31,9 +45,11 @@ export async function getEntity(
   id: string,
   limit?: number,
 ): Promise<{ profile: AcmiProfile | null; signals: AcmiSignals | null; recentTimeline: AcmiEvent[] }> {
+  const orgId = currentOrgId;
   const params = new URLSearchParams();
   params.set('slot', 'entity');
   if (limit != null) params.set('limit', String(limit));
+  if (orgId) params.set('orgId', orgId);
 
   const response = await fetch(`/api/acmi/${encodeURIComponent(ns)}/${encodeURIComponent(id)}?${params}`);
   if (!response.ok) {
@@ -57,12 +73,14 @@ export async function getTimeline(
   id: string,
   options?: AcmiTimelineOptions,
 ): Promise<AcmiEvent[]> {
+  const orgId = currentOrgId;
   const params = new URLSearchParams();
   params.set('slot', 'timeline');
   if (options?.limit != null) params.set('limit', String(options.limit));
   if (options?.reverse != null) params.set('reverse', String(options.reverse));
   if (options?.since != null) params.set('since', String(options.since));
   if (options?.until != null) params.set('until', String(options.until));
+  if (orgId) params.set('orgId', orgId);
 
   const response = await fetch(`/api/acmi/${encodeURIComponent(ns)}/${encodeURIComponent(id)}?${params}`);
   if (!response.ok) {
@@ -93,6 +111,7 @@ export async function catTimeline(
   sources: CatTimelineSource[],
   options?: AcmiCatOptions,
 ): Promise<AcmiCatResult> {
+  const orgId = currentOrgId;
   const params = new URLSearchParams();
   const keys = sources.map((s) => `${s.namespace}:${s.id}`).join(',');
   params.set('keys', keys);
@@ -100,6 +119,7 @@ export async function catTimeline(
   if (options?.since != null) params.set('since', options.since);
   if (options?.deduplicate != null) params.set('deduplicate', String(options.deduplicate));
   if (options?.sinceMs != null) params.set('sinceMs', String(options.sinceMs));
+  if (orgId) params.set('orgId', orgId);
 
   const response = await fetch(`/api/acmi/cat?${params}`);
   if (!response.ok) {
@@ -119,7 +139,11 @@ export async function catTimeline(
  * Used by: useAcmiWorkItems
  */
 export async function listWorkItems(): Promise<{ ids: string[] }> {
-  const response = await fetch('/api/acmi/work/list');
+  const orgId = currentOrgId;
+  const params = new URLSearchParams();
+  if (orgId) params.set('orgId', orgId);
+
+  const response = await fetch(`/api/acmi/work?${params}`);
   if (!response.ok) {
     throw new Error(`Failed to list work items: ${response.status} ${response.statusText}`);
   }
@@ -132,7 +156,11 @@ export async function listWorkItems(): Promise<{ ids: string[] }> {
  * Used by: useAcmiWorkItems
  */
 export async function getWorkItem(id: string): Promise<AcmiWorkItem> {
-  const response = await fetch(`/api/acmi/work/${encodeURIComponent(id)}`);
+  const orgId = currentOrgId;
+  const params = new URLSearchParams();
+  if (orgId) params.set('orgId', orgId);
+
+  const response = await fetch(`/api/acmi/work/${encodeURIComponent(id)}?${params}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch work item: ${response.status} ${response.statusText}`);
   }
