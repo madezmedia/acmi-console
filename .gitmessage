@@ -1,0 +1,11 @@
+# Conventional commit template for ACMI Console
+# <type>: <description>
+#
+# Types: feat, fix, docs, style, refactor, test, chore, ci, perf
+# Examples:
+#   feat: add agent detail timeline
+#   fix: resolve Clerk middleware crash on missing key
+#   ci: add route QA test runner
+#   docs: update deployment instructions
+#
+# Keep subject under 72 chars. Body wraps at 72 chars.
